@@ -111,24 +111,29 @@ fun WorkoutDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .padding(16.dp)
+                .padding(horizontal = 40.dp)
         ) {
             uiState.workout?.let { workout ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = getWorkoutCategoryIcon(workout.category),
                         contentDescription = null,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(80.dp)
                     )
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    Column {
                         Text("Category: ${workout.category}")
                         Text("Duration: ${workout.duration ?: 0} minutes")
                         Text("Date: ${SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(workout.dateTime))}")
-                        Text("Rating: ${workout.enjoymentRating}")
-                        workout.comments?.let { comments ->
-                            Text("Comments: $comments")
-                        }
                     }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Rating: ${workout.enjoymentRating}")
+                workout.comments?.let { comments ->
+                    Text("Comments: $comments")
                 }
             }
         }
