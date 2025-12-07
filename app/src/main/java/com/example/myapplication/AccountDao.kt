@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -12,8 +13,14 @@ interface AccountDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(account: Account)
 
+    @Update
+    suspend fun update(account: Account)
+
     @Query("SELECT * FROM accounts WHERE username = :username")
     fun getAccount(username: String): Flow<Account?>
+
+    @Query("SELECT * FROM accounts WHERE id = :id")
+    fun getAccountById(id: Int): Flow<Account?>
 
     @Query("SELECT * FROM accounts WHERE username = :username")
     suspend fun getAccountByUsername(username: String): Account?

@@ -6,7 +6,8 @@ import com.example.myapplication.data.WorkoutsRepository
 
 class ViewModelFactory(
     private val accountsRepository: AccountsRepository,
-    private val workoutsRepository: WorkoutsRepository
+    private val workoutsRepository: WorkoutsRepository,
+    private val userId: Int? = null
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AuthenticationViewModel::class.java)) {
@@ -24,6 +25,14 @@ class ViewModelFactory(
         if (modelClass.isAssignableFrom(WorkoutDetailViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return WorkoutDetailViewModel(workoutsRepository) as T
+        }
+        if (modelClass.isAssignableFrom(ViewProfileViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ViewProfileViewModel(accountsRepository, userId ?: -1) as T
+        }
+        if (modelClass.isAssignableFrom(EditProfileViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return EditProfileViewModel(accountsRepository, userId ?: -1) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

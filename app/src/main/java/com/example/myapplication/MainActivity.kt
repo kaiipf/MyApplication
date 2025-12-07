@@ -26,29 +26,27 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(application)
         val accountsRepository = AccountsRepository(database.accountDao())
         val workoutsRepository = WorkoutsRepository(database.workoutDao())
-        val factory = ViewModelFactory(accountsRepository, workoutsRepository)
-        val authViewModel = ViewModelProvider(this, factory)[AuthenticationViewModel::class.java]
-        val addWorkoutViewModel = ViewModelProvider(this, factory)[AddWorkoutViewModel::class.java]
-        val landingViewModel = ViewModelProvider(this, factory)[LandingViewModel::class.java]
-        val workoutDetailViewModel = ViewModelProvider(this, factory)[WorkoutDetailViewModel::class.java]
 
         setContent {
             MyApplicationTheme {
                 val navController = rememberNavController()
 
-                LaunchedEffect(Unit) {
-                    authViewModel.navigationEvent.onEach { event ->
-                        when (event) {
-                            is NavigationEvent.NavigateToLanding -> navController.navigate("landing/${event.userId}")
-                            is NavigationEvent.NavigateToLogin -> navController.navigate("login")
-                        }
-                    }.launchIn(this)
-                }
-
                 Scaffold {
                     NavHost(navController = navController, startDestination = "login", modifier = Modifier.padding(it)) {
                         composable("login") {
+                            val factory = ViewModelFactory(accountsRepository, workoutsRepository)
+                            val authViewModel = ViewModelProvider(this@MainActivity, factory)[AuthenticationViewModel::class.java]
                             val uiState by authViewModel.loginUiState.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                authViewModel.navigationEvent.onEach { event ->
+                                    when (event) {
+                                        is NavigationEvent.NavigateToLanding -> navController.navigate("landing/${event.userId}")
+                                        is NavigationEvent.NavigateToLogin -> navController.navigate("login")
+                                    }
+                                }.launchIn(this)
+                            }
+
                             LoginScreen(
                                 uiState = uiState,
                                 onUsernameChange = authViewModel::onLoginUsernameChange,
@@ -58,6 +56,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("registration") {
+                            val factory = ViewModelFactory(accountsRepository, workoutsRepository)
+                            val authViewModel = ViewModelProvider(this@MainActivity, factory)[AuthenticationViewModel::class.java]
                             val uiState by authViewModel.registrationUiState.collectAsState()
                             RegistrationScreen(
                                 uiState = uiState,
@@ -75,28 +75,50 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("landing/{userId}") { backStackEntry ->
                             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: -1
+                            val factory = ViewModelFactory(accountsRepository, workoutsRepository)
+                            val landingViewModel = ViewModelProvider(this@MainActivity, factory)[LandingViewModel::class.java]
                             LandingScreen(
                                 viewModel = landingViewModel,
                                 onLogout = { navController.navigate("login") { popUpTo("login") { inclusive = true } } },
                                 onNavigateToAddWorkout = { navController.navigate("add_workout/$userId") },
-                                onNavigateToViewProfile = { navController.navigate("view_profile") },
+                                onNavigateToViewProfile = { navController.navigate("view_profile/$userId") },
                                 onNavigateToWorkoutDetail = { workoutId -> navController.navigate("workout_detail/$workoutId") },
                                 userId = userId
                             )
                         }
                         composable("add_workout/{userId}") { backStackEntry ->
                             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: -1
+                            val factory = ViewModelFactory(accountsRepository, workoutsRepository)
+                            val addWorkoutViewModel = ViewModelProvider(this@MainActivity, factory)[AddWorkoutViewModel::class.java]
                             AddWorkoutScreen(
                                 viewModel = addWorkoutViewModel,
                                 onNavigateUp = { navController.navigateUp() },
                                 userId = userId
                             )
                         }
-                        composable("view_profile") {
-                            ViewProfileScreen()
+                        composable("view_profile/{userId}") { backStackEntry ->
+                            val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: -1
+                            val factory = ViewModelFactory(accountsRepository, workoutsRepository, userId)
+                            val viewProfileViewModel = ViewModelProvider(this@MainActivity, factory)[ViewProfileViewModel::class.java]
+                            ViewProfileScreen(
+                                viewModel = viewProfileViewModel,
+                                onNavigateUp = { navController.navigateUp() },
+                                onNavigateToEditProfile = { navController.navigate("edit_profile/$userId") }
+                            )
+                        }
+                        composable("edit_profile/{userId}") { backStackEntry ->
+                            val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: -1
+                            val factory = ViewModelFactory(accountsRepository, workoutsRepository, userId)
+                            val editProfileViewModel = ViewModelProvider(this@MainActivity, factory)[EditProfileViewModel::class.java]
+                            EditProfileScreen(
+                                viewModel = editProfileViewModel,
+                                onNavigateUp = { navController.navigateUp() }
+                            )
                         }
                         composable("workout_detail/{workoutId}") { backStackEntry ->
                             val workoutId = backStackEntry.arguments?.getString("workoutId")?.toIntOrNull() ?: -1
+                            val factory = ViewModelFactory(accountsRepository, workoutsRepository)
+                            val workoutDetailViewModel = ViewModelProvider(this@MainActivity, factory)[WorkoutDetailViewModel::class.java]
                             WorkoutDetailScreen(
                                 viewModel = workoutDetailViewModel,
                                 workoutId = workoutId,
